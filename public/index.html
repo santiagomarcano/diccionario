@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diccionario</title>
+  </head>
+
+  <body>
+    <h1>Diccionario</h1>
+
+    <form>
+      <div>
+        <label>Palabra en Inglés</label>
+        <input name="english" placeholder="Inglés" />
+      </div>
+      <div>
+        <label>Palabra en Español</label>
+        <input name="spanish" placeholder="Español" />
+      </div>
+      <button type="submit">Guardar</button>
+    </form>
+
+    <script>
+      // Limpiamos código!!!!!
+      const form = document.querySelector("form");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const [{ value: english }, { value: spanish }] = e.target.elements;
+        fetch("/diccionario", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ english, spanish }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            showDiccionario(data.diccionario);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      });
+      const ul = document.createElement("ul");
+      document.body.appendChild(ul);
+      fetch("/diccionario", { method: "GET" })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          showDiccionario(data.diccionario);
+        });
+      function showDiccionario(diccionario) {
+        ul.innerHTML = "";
+        let node = ``;
+        for (let palabra of diccionario) {
+          node += `
+                    <li>
+                        <span>English ${palabra.english}</span>
+                        <span>Spanish ${palabra.spanish}</span>
+                        <button id="${palabra.id}" class="deleteButton">Borrar</button>
+                    </li>
+                `;
+        }
+        ul.innerHTML = node;
+        document.querySelectorAll(".deleteButton").forEach((button) => {
+          button.addEventListener("click", (e) => {
+            const id = e.target.id;
+            console.log(id);
+            fetch(`/diccionario/${id}`, { method: "DELETE" })
+              .then((res) => res.json())
+              .then((data) => {
+                showDiccionario(data.diccionario);
+              });
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
